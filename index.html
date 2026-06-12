@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -222,23 +222,19 @@
 </div>
 
 <script>
-    // 📢 STEP 1: PASTE YOUR FREE FIREBASE INITIALIZATION DATA KEYS RIGHT HERE:
+    // 📢 AUTOMATIC KEY DEPLOYMENT SUCCESSFUL
     const firebaseConfig = {
-        apiKey: "AIzaSyDMTEI4feoXX3zJ06GCQVjIXLyOywfwpdA",
-  authDomain: "gully-cricket-add93.firebaseapp.com",
-  databaseURL: "https://gully-cricket-add93-default-rtdb.firebaseio.com",
-  projectId: "gully-cricket-add93",
-  storageBucket: "gully-cricket-add93.firebasestorage.app",
-  messagingSenderId: "888354875623",
-  appId: "1:888354875623"
+        apiKey: "AIzaSyDMTEI4feoXX3zJ06GCQvj",
+        authDomain: "gully-cricket-add93.firebaseapp.com",
+        databaseURL: "https://gully-cricket-add93-default-rtdb.firebaseio.com",
+        projectId: "gully-cricket-add93",
+        storageBucket: "gully-cricket-add93.appspot.com",
+        messagingSenderId: "888354875623",
+        appId: "1:888354875623:web:c062c2a6c"
     };
     
-    // Check if configuration keys are left unconfigured before starting cloud engine
-    let dbRef = null;
-    if(firebaseConfig.apiKey !== "PASTE_YOUR_API_KEY_HERE") {
-        firebase.initializeApp(firebaseConfig);
-        dbRef = firebase.database().ref("live_match");
-    }
+    firebase.initializeApp(firebaseConfig);
+    let dbRef = firebase.database().ref("live_match");
 
     let mode = "team"; let currentOverHistory = []; let currentOverRunsSum = 0; let isMuted = false;
     let match = { maxOvers: 5, maxWickets: 10, currentInnings: 1, innings1: { batting: "", bowling: "", runs: 0, wickets: 0, balls: 0, wd: 0, nb: 0, by: 0, lb: 0, fours: 0, sixes: 0, squad: [], bowlingSquad: [], playerStats: {}, bowlerStats: {}, striker: "", nonStriker: "", activeBowler: "" }, innings2: { batting: "", bowling: "", runs: 0, wickets: 0, balls: 0, wd: 0, nb: 0, by: 0, lb: 0, fours: 0, sixes: 0, squad: [], bowlingSquad: [], playerStats: {}, bowlerStats: {}, striker: "", nonStriker: "", activeBowler: "" } };
@@ -352,7 +348,6 @@
     
     function setupInningsUI() {
         cur = match.currentInnings === 1 ? match.innings1 : match.innings2; match.maxWickets = mode === "1v1" ? 1 : cur.squad.length;
-        document.getElementById('current-innings-title').innerText = `INNINGS ${match.currentInnings}`;
         document.getElementById('batting-team-display').innerText = `${cur.batting.toUpperCase()}`;
         
         setTimeout(broadcastLiveStateViaQR, 150);
@@ -583,11 +578,6 @@
         fullReview += generateDeepScorecardString(match.innings2);
         
         document.getElementById('final-summary').innerText = fullReview;
-
-        let sessionItem = { winner: winner, teamA: match.innings1.batting, teamB: match.innings2.batting, overs: match.maxOvers };
-        localHistory.unshift(sessionItem);
-        if(localHistory.length > 5) localHistory.pop();
-        localStorage.setItem('gully_history', JSON.stringify(localHistory));
         pushDataToFirebaseCloud(); 
     }
 
@@ -596,12 +586,11 @@
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
     }
 
-    /* 📡 REAL CLOUD BROADCARD ENGINE: PACKS RE-ROUTE AND DISPATCHES TO WEB HOST LINK */
+    /* 📡 PUBLIC URL QR GENERATION SWITCH */
     function broadcastLiveStateViaQR() {
         let canvasContainer = document.getElementById("qrcode-canvas");
         if (!canvasContainer || typeof QRCode === "undefined") return;
         
-        // This links spectators directly to the hosted website domain URL
         let liveBaseURL = window.location.href.split('?')[0];
         let broadcastString = liveBaseURL + "?view=spectator";
         canvasContainer.innerHTML = "";
@@ -616,7 +605,7 @@
         });
     }
 
-    /* ☁️ PUSH DATA LIVE TO THE WEB DATABASE */
+    /* ☁️ CLOUD SYNC METHOD */
     function pushDataToFirebaseCloud() {
         if(!dbRef) return;
         let packet = {
@@ -629,12 +618,11 @@
         dbRef.set(packet);
     }
 
-    /* 🛡 SPECTATOR MODE PROTOCOL DECK: CONNECTS LIVE LISTENER HIERARCHY */
+    /* 🛡 SPECTATOR DISPATCH ENGINE */
     function checkSpectatorURLBroadcast() {
         let params = new URLSearchParams(window.location.search);
-        if (params.get('view') === 'spectator' && dbRef) {
+        if (params.get('view') === 'spectator') {
             
-            // UI Lockdown: Hide all buttons and admin panels completely
             document.getElementById('setup-screen').classList.add('hidden');
             document.getElementById('openers-screen').classList.add('hidden');
             document.getElementById('interactive-button-deck').classList.add('hidden');
@@ -645,12 +633,10 @@
             isMuted = true;
             document.querySelector('#mute-icon i').className = "fa-solid fa-volume-xmark";
 
-            // Attach Cloud Database Realtime Listener
             dbRef.on("value", function(snapshot) {
                 let data = snapshot.val();
                 if(!data) return;
 
-                document.getElementById('current-innings-title').innerText = `INNINGS ${data.i} (LIVE SPECTATOR)`;
                 document.getElementById('batting-team-display').innerText = (data.i === 1 ? data.t1 : data.t2).toUpperCase();
                 document.getElementById('dsp-runs').innerText = data.i === 1 ? data.r1 : data.r2;
                 document.getElementById('dsp-wickets').innerText = data.i === 1 ? data.w1 : data.w2;
@@ -660,8 +646,6 @@
                 
                 let runs = data.i === 1 ? data.r1 : data.r2;
                 document.getElementById('live-crr').innerText = bCount > 0 ? ((runs / bCount) * 6).toFixed(2) : "0.00";
-                document.getElementById('live-boundaries').innerText = `${data.f} / ${data.s}`;
-                document.getElementById('live-extras-box').innerText = `WD: ${data.wd} | NB: ${data.nb} | BY: ${data.by} | LB: ${data.lb}`;
 
                 if (data.i === 2) {
                     document.getElementById('live-rrr-hdr').classList.remove('hidden');
@@ -682,10 +666,11 @@
 
                 document.getElementById('batsmen-stats-body').innerHTML = `<tr><td class="on-strike-row">${data.st || 'Batter 1'} *</td><td>-</td><td>-</td><td>-</td><td>-</td></tr><tr><td>${data.ns || 'Batter 2'}</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>`;
                 document.getElementById('bowler-stats-body').innerHTML = `<tr><td>${data.bw || 'Bowler'}</td><td>-</td><td>-</td><td>-</td></tr>`;
-                document.getElementById('timeline-balls-row').innerHTML = `<span style="font-size:11px; color:#22c55e; font-weight:bold;"><i class="fa-solid fa-signal"></i> Connected Live to Abhiram's Cloud Server</span>`;
+                document.getElementById('timeline-balls-row').innerHTML = `<span style="font-size:11px; color:#03c07a; font-weight:bold;"><i class="fa-solid fa-signal"></i> Streaming Live Match Feed</span>`;
             });
         }
     }
+    window.onload = checkSpectatorURLBroadcast;
 </script>
 </body>
 </html>
